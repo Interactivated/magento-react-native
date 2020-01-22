@@ -9,11 +9,11 @@
  *                           app won't work
  */
 export const magentoOptions = {
-  url: 'http://mage2.local/',
+  url: 'http://vlad.mage2.interactivated.me/',
   home_cms_block_id: '19',
   authentication: {
     integration: {
-      access_token: 'cdlodltsj3wfwd1jrx08q9nfprb5idq4',
+      access_token: 'wr5blidx8m1bezmq36jyqa035ix51lp7',
     },
   },
 };
