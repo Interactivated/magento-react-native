@@ -1,18 +1,16 @@
 import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
-import {
-  StyleSheet,
-  TouchableOpacity,
-  View,
-  Image,
-} from 'react-native';
-import { Text } from '../common';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import FastImage from 'react-native-fast-image';
+import { Text, Price } from '../common';
 import { getProductThumbnailFromAttribute } from '../../helper/product';
 import { ThemeContext } from '../../theme';
+import { finalPrice } from '../../helper/price';
 
 const FeaturedProductItem = ({
   onPress,
   currencySymbol,
+  currencyRate,
   product,
 }) => {
   const theme = useContext(ThemeContext);
@@ -22,7 +20,7 @@ const FeaturedProductItem = ({
         style={styles.containerStyle(theme)}
         onPress={() => { onPress(product); }}
       >
-        <Image
+        <FastImage
           style={styles.imageStyle(theme)}
           resizeMode="contain"
           source={{ uri: getProductThumbnailFromAttribute(product) }}
@@ -36,12 +34,12 @@ const FeaturedProductItem = ({
           >
             {product.name}
           </Text>
-          <Text
-            type="caption"
-            style={styles.priceStyle}
-          >
-            {`${currencySymbol} ${product.price}`}
-          </Text>
+          <Price
+            basePrice={product.price}
+            discountPrice={finalPrice(product.custom_attributes, product.price)}
+            currencySymbol={currencySymbol}
+            currencyRate={currencyRate}
+          />
         </View>
       </TouchableOpacity>
     </View>
@@ -66,6 +64,7 @@ const styles = StyleSheet.create({
   infoStyle: {
     flexDirection: 'column',
     justifyContent: 'center',
+    alignItems: 'center',
   },
   textStyle: theme => ({
     justifyContent: 'center',
@@ -84,6 +83,7 @@ const styles = StyleSheet.create({
 
 FeaturedProductItem.propTypes = {
   currencySymbol: PropTypes.string.isRequired,
+  currencyRate: PropTypes.number.isRequired,
   onPress: PropTypes.func,
   product: PropTypes.object,
 };

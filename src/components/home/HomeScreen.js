@@ -11,21 +11,24 @@ import {
 } from '../../navigation/routes';
 import { getHomeData, setCurrentProduct } from '../../actions';
 import HomeSlider from './HomeSlider';
+import CurrencyPicker from './CurrencyPicker';
 import FeaturedProducts from './FeaturedProducts';
 import NavigationService from '../../navigation/NavigationService';
 import { ThemeContext } from '../../theme';
+import { translate } from '../../i18n';
 
 class HomeScreen extends Component {
   static contextType = ThemeContext;
 
   static navigationOptions = ({ navigation }) => ({
-    title: 'Magento React Native',
+    title: translate('home.title'),
     headerBackTitle: ' ',
     headerLeft: (
       <MaterialHeaderButtons>
         <Item title="menu" iconName="menu" onPress={navigation.getParam('toggleDrawer')} />
       </MaterialHeaderButtons>
     ),
+    headerRight: <CurrencyPicker />,
   });
 
   componentDidMount() {
@@ -60,6 +63,7 @@ class HomeScreen extends Component {
         title={this.props.featuredCategories[key].title}
         onPress={this.onProductPress}
         currencySymbol={this.props.currencySymbol}
+        currencyRate={this.props.currencyRate}
       />
     ));
   }
@@ -112,6 +116,7 @@ HomeScreen.propTypes = {
   featuredCategories: PropTypes.object,
   setCurrentProduct: PropTypes.func,
   currencySymbol: PropTypes.string.isRequired,
+  currencyRate: PropTypes.number.isRequired,
   refreshing: PropTypes.bool,
 };
 
@@ -122,10 +127,19 @@ HomeScreen.defaultProps = {
 
 const mapStateToProps = (state) => {
   const { refreshing } = state.home;
-  const { errorMessage, currency } = state.magento;
-  const { default_display_currency_symbol: currencySymbol } = currency;
+  const {
+    errorMessage,
+    currency: {
+      displayCurrencySymbol: currencySymbol,
+      displayCurrencyExchangeRate: currencyRate,
+    },
+  } = state.magento;
   return {
-    ...state.home, refreshing, errorMessage, currencySymbol,
+    ...state.home,
+    refreshing,
+    errorMessage,
+    currencySymbol,
+    currencyRate,
   };
 };
 

@@ -1,20 +1,21 @@
 import React, { useContext } from 'react';
-import {
-  View, Image, TouchableOpacity, Alert,
-} from 'react-native';
+import { View, TouchableOpacity, Alert } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { Icon } from 'react-native-elements';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { magento } from '../../magento';
 import { getProductThumbnailFromAttribute } from '../../helper/product';
-import { Spinner, Text } from '../common';
+import { Spinner, Text, Price } from '../common';
 import { removeFromCartLoading, removeFromCart } from '../../actions';
 import { ThemeContext } from '../../theme';
+import { translate } from '../../i18n';
 
 const CartListItem = ({
-  products,
   item,
   cart,
+  products,
+  currencyRate,
+  currencySymbol,
   removeFromCartLoading: _removeFromCartLoading,
   removeFromCart: _removeFromCart,
 }) => {
@@ -28,11 +29,11 @@ const CartListItem = ({
 
   const onPressRemoveItem = () => {
     Alert.alert(
-      'You sure?',
-      `Just double-checking you wanted to remove the item: ${item.name}`,
+      translate('cartListItem.removeItemDialogTitle'),
+      `${translate('cartListItem.removeItemDialogMessage')}: ${item.name}`,
       [
-        { text: 'Cancel', onPress: () => console.log('Cancel Pressed'), style: 'cancel' },
-        { text: 'Remove it', onPress: () => performRemoveItem() },
+        { text: translate('common.cancel'), onPress: () => console.log('Cancel Pressed'), style: 'cancel' },
+        { text: translate('common.ok'), onPress: () => performRemoveItem() },
       ],
       { cancelable: true },
     );
@@ -51,17 +52,18 @@ const CartListItem = ({
 
   return (
     <View style={styles.container(theme)}>
-      <Image style={styles.imageStyle(theme)} resizeMode="contain" source={{ uri: imageUri }} />
+      <FastImage style={styles.imageStyle(theme)} resizeMode="contain" source={{ uri: imageUri }} />
       <View style={styles.infoStyle}>
         <Text style={styles.textStyle(theme)}>{item.name}</Text>
+        <View style={styles.textStyle(theme)}>
+          <Price
+            basePrice={item.price}
+            currencySymbol={currencySymbol}
+            currencyRate={currencyRate}
+          />
+        </View>
         <Text style={styles.textStyle(theme)}>
-          {magento.storeConfig.default_display_currency_code}
-          {' '}
-          {item.price}
-        </Text>
-        <Text style={styles.textStyle(theme)}>
-          Qty:
-          {item.qty}
+          {`${translate('common.quantity')}: ${item.qty}`}
         </Text>
       </View>
       <View style={styles.removeContainer}>
@@ -132,6 +134,8 @@ CartListItem.propTypes = {
   products: PropTypes.object,
   item: PropTypes.object.isRequired,
   cart: PropTypes.object.isRequired,
+  currencySymbol: PropTypes.string.isRequired,
+  currencyRate: PropTypes.number.isRequired,
   removeFromCartLoading: PropTypes.func.isRequired,
   removeFromCart: PropTypes.func.isRequired,
 };
@@ -142,7 +146,10 @@ CartListItem.defaultProps = {
 
 const mapStateToProps = ({ cart }) => {
   const { products } = cart;
-  return { products, cart };
+  return {
+    cart,
+    products,
+  };
 };
 
 export default connect(mapStateToProps, { removeFromCartLoading, removeFromCart })(CartListItem);

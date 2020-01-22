@@ -10,24 +10,25 @@ import {
 import ModalSelector from 'react-native-modal-selector';
 import { ProductListItem, Spinner, Text } from '.';
 import { ThemeContext } from '../../theme';
+import { translate } from '../../i18n';
 
 const COLUMN_COUNT = 2;
 
 const sortData = [
   {
-    label: 'Name: a to z',
+    label: translate('common.sortOption.aToZ'),
     key: 0,
   },
   {
-    label: 'Name: z to a',
+    label: translate('common.sortOption.zToA'),
     key: 1,
   },
   {
-    label: 'Price: low to high',
+    label: translate('common.sortOption.priceLowToHigh'),
     key: 2,
   },
   {
-    label: 'Price: high to low',
+    label: translate('common.sortOption.priceHighToLow'),
     key: 3,
   },
 ];
@@ -35,6 +36,7 @@ const sortData = [
 const ProductList = ({
   onRowPress,
   currencySymbol,
+  currencyRate,
   performSort,
   navigation,
   canLoadMoreContent,
@@ -54,6 +56,7 @@ const ProductList = ({
       product={item}
       onRowPress={onRowPress}
       currencySymbol={currencySymbol}
+      currencyRate={currencyRate}
     />
   );
 
@@ -67,10 +70,10 @@ const ProductList = ({
       columnContainerStyle={styles.columnContainerStyle}
       textStyle={styles.textStyle}
       infoStyle={styles.infoStyle}
-      priceStyle={styles.priceStyle}
       product={item}
       onRowPress={onRowPress}
       currencySymbol={currencySymbol}
+      currencyRate={currencyRate}
     />
   );
 
@@ -86,7 +89,7 @@ const ProductList = ({
             onPress={() => selector.current.open()}
           >
             <Icon name="sort" size={24} color="#95989F" />
-            <Text style={styles.headerTextStyle(theme)}>Sort</Text>
+            <Text style={styles.headerTextStyle(theme)}>{translate('common.sort')}</Text>
           </TouchableOpacity>
         )}
         onChange={option => performSort(option.key)}
@@ -97,7 +100,7 @@ const ProductList = ({
         onPress={() => navigation.toggleFilterDrawer()}
       >
         <Icon name="filter" size={24} color="#95989F" />
-        <Text style={styles.headerTextStyle(theme)}>Filter</Text>
+        <Text style={styles.headerTextStyle(theme)}>{translate('common.filter')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -137,7 +140,7 @@ const ProductList = ({
     if (!searchIndicator) {
       return (
         <View style={styles.notFoundTextWrap}>
-          <Text style={styles.notFoundText}>No products found</Text>
+          <Text style={styles.notFoundText}>{translate('errors.noProduct')}</Text>
         </View>
       );
     }
@@ -169,6 +172,7 @@ const styles = StyleSheet.create({
   infoStyle: {
     flexDirection: 'column',
     justifyContent: 'center',
+    alignItems: 'center',
   },
   textStyle: {
     justifyContent: 'center',
@@ -176,9 +180,6 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     marginTop: 0,
     padding: 0,
-  },
-  priceStyle: {
-    textAlign: 'center',
   },
   imageStyle: {
     flex: 1,
@@ -215,6 +216,7 @@ const styles = StyleSheet.create({
 ProductList.propTypes = {
   onRowPress: PropTypes.func,
   currencySymbol: PropTypes.string.isRequired,
+  currencyRate: PropTypes.number.isRequired,
   performSort: PropTypes.func,
   navigation: PropTypes.object.isRequired,
   canLoadMoreContent: PropTypes.bool.isRequired,

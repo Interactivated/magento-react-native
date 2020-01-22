@@ -13,8 +13,10 @@ import {
   checkoutSetActiveSection,
 } from '../../actions';
 import { NAVIGATION_HOME_STACK_PATH } from '../../navigation/routes';
-import { Button, Spinner, Text } from '../common';
+import { Button, Spinner, Text, Price } from '../common';
 import { ThemeContext } from '../../theme';
+import { translate } from '../../i18n';
+import { priceSignByCode } from '../../helper/price';
 
 class CheckoutTotals extends Component {
   static contextType = ThemeContext;
@@ -50,31 +52,63 @@ class CheckoutTotals extends Component {
   };
 
   renderTotals() {
-    const { totals } = this.props;
+    const {
+      totals: {
+        base_currency_code: baseCurrencyCode,
+        base_subtotal: baseSubTotal,
+        base_grand_total: grandTotal,
+        base_shipping_incl_tax: shippingTotal,
+      },
+      baseCurrencySymbol,
+      currencyCode,
+      currencySymbol,
+      currencyRate,
+    } = this.props;
 
     return (
       <View style={styles.totalsStyle}>
-        <Text>
-          Subtotals -
-          {' '}
-          {totals.subtotal_incl_tax}
-          {' '}
-          {totals.quote_currency_code}
-        </Text>
-        <Text>
-          Shipping -
-          {' '}
-          {totals.shipping_incl_tax}
-          {' '}
-          {totals.quote_currency_code}
-        </Text>
-        <Text>
-          Totals -
-          {' '}
-          {totals.grand_total}
-          {' '}
-          {totals.quote_currency_code}
-        </Text>
+        <View style={styles.row}>
+          <Text>
+            {`${translate('common.subTotal')}: `}
+          </Text>
+          <Price
+            basePrice={baseSubTotal}
+            currencySymbol={currencySymbol}
+            currencyRate={currencyRate}
+          />
+        </View>
+        <View style={styles.row}>
+          <Text>
+            {`${translate('common.shipping')}: `}
+          </Text>
+          <Price
+            basePrice={shippingTotal}
+            currencySymbol={currencySymbol}
+            currencyRate={currencyRate}
+          />
+        </View>
+        <View style={styles.row}>
+          <Text>
+            {`${translate('common.total')}: `}
+          </Text>
+          <Price
+            basePrice={grandTotal}
+            currencySymbol={currencySymbol}
+            currencyRate={currencyRate}
+          />
+        </View>
+        {
+          baseCurrencyCode !== currencyCode && (
+            <View style={styles.row}>
+              <Text>{`${translate('checkout.youWillBeCharged')}: `}</Text>
+              <Price
+                basePrice={grandTotal}
+                currencySymbol={baseCurrencySymbol || priceSignByCode(baseCurrencyCode)}
+                currencyRate={1}
+              />
+            </View>
+          )
+        }
       </View>
     );
   }
@@ -100,18 +134,18 @@ class CheckoutTotals extends Component {
           disable={this.props.loading}
           style={styles.buttonStyle(theme)}
         >
-          Place Order
+          {translate('checkout.placeOrderButton')}
         </Button>
       </View>
     );
   }
 
-  componentDidUpdate(prevProps): void {
+  componentDidUpdate(prevProps) {
     if (this.props.orderId && this.props.orderId !== prevProps.orderId) {
-      this.showPopup('Order', 'Order placed successfully');
+      this.showPopup(translate('common.order'), translate('checkout.orderSuccessMessage'));
     }
     if (this.props.errorMessage && this.props.errorMessage !== prevProps.errorMessage) {
-      this.showPopup('Error', this.props.errorMessage);
+      this.showPopup(translate('errors.error'), this.props.errorMessage);
     }
   }
 
@@ -122,7 +156,7 @@ class CheckoutTotals extends Component {
     Alert.alert(
       title,
       message,
-      [{ text: 'OK', onPress: () => this.goHome() }],
+      [{ text: translate('common.ok'), onPress: () => this.goHome() }],
       { cancelable: false },
     );
   }
@@ -151,6 +185,9 @@ const styles = StyleSheet.create({
     flex: 1,
     alignSelf: 'center',
   },
+  row: {
+    flexDirection: 'row',
+  },
   totalsStyle: {
     alignItems: 'flex-end',
     alignSelf: 'flex-end',
@@ -162,14 +199,30 @@ const styles = StyleSheet.create({
   }),
 });
 
-const mapStateToProps = ({ cart, checkout }) => {
+const mapStateToProps = ({ cart, checkout, magento }) => {
   const { cartId } = cart;
   const { loading } = checkout.ui;
   const {
     payments, selectedPayment, totals, orderId, errorMessage,
   } = checkout;
+  const {
+    base_currency_symbol: baseCurrencySymbol,
+    displayCurrencyCode: currencyCode,
+    displayCurrencySymbol: currencySymbol,
+    displayCurrencyExchangeRate: currencyRate,
+  } = magento.currency;
   return {
-    cartId, payments, selectedPayment, totals, loading, orderId, errorMessage,
+    cartId,
+    payments,
+    selectedPayment,
+    totals,
+    loading,
+    orderId,
+    errorMessage,
+    baseCurrencySymbol,
+    currencyCode,
+    currencySymbol,
+    currencyRate,
   };
 };
 

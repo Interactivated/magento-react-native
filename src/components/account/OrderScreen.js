@@ -1,24 +1,22 @@
 import React, { useEffect, useContext } from 'react';
-import {
-  View,
-  Image,
-  StyleSheet,
-  FlatList,
-} from 'react-native';
+import { View, StyleSheet, FlatList } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { Text } from '../common';
+import { Text, Price } from '../common';
 import { orderProductDetail } from '../../actions';
 import { getProductThumbnailFromAttribute } from '../../helper/product';
 import { ThemeContext } from '../../theme';
+import { translate } from '../../i18n';
+import { priceSignByCode } from '../../helper/price';
 
 const OrderScreen = ({
   products,
   navigation,
-  currencySymbol,
   orderProductDetail: _orderProductDetail,
 }) => {
   const theme = useContext(ThemeContext);
+  const currencySymbol = priceSignByCode(navigation.state.params.item.order_currency_code);
 
   useEffect(() => {
     navigation.state.params.item.items.forEach((item) => {
@@ -37,15 +35,29 @@ const OrderScreen = ({
   const renderItem = item => (
     <View style={styles.itemContainer(theme)}>
       <View style={styles.row}>
-        <Image style={styles.imageStyle(theme)} resizeMode="contain" source={{ uri: image(item.item) }} />
+        <FastImage style={styles.imageStyle(theme)} resizeMode="contain" source={{ uri: image(item.item) }} />
         <View>
           <Text bold>{item.item.name}</Text>
-          <Text type="label">{`SKU: ${item.item.sku}`}</Text>
-          <Text type="label">
-            {`Price: ${currencySymbol} ${item.item.price}`}
-          </Text>
-          <Text type="label">{`Qty: ${item.item.qty_ordered}`}</Text>
-          <Text type="label">{`Subtotal: ${currencySymbol} ${item.item.row_total}`}</Text>
+          <Text type="label">{`${translate('common.sku')}: ${item.item.sku}`}</Text>
+          <View style={styles.row}>
+            <Text type="label">
+              {`${translate('common.price')}: `}
+            </Text>
+            <Price
+              currencyRate={1}
+              currencySymbol={currencySymbol}
+              basePrice={item.item.price}
+            />
+          </View>
+          <Text type="label">{`${translate('common.quantity')}: ${item.item.qty_ordered}`}</Text>
+          <View style={styles.row}>
+            <Text type="label">{`${translate('common.subTotal')}: `}</Text>
+            <Price
+              basePrice={item.item.row_total}
+              currencyRate={1}
+              currencySymbol={currencySymbol}
+            />
+          </View>
         </View>
       </View>
     </View>
@@ -60,22 +72,43 @@ const OrderScreen = ({
         renderItem={renderItem}
         keyExtractor={(_item, index) => index.toString()}
       />
-      <Text type="label">{`Status: ${item.status}`}</Text>
-      <Text type="label">
-        {`Subtotal: ${currencySymbol} ${item.subtotal}`}
-      </Text>
-      <Text type="label">
-        {`Shipping & Handling: ${currencySymbol} ${item.shipping_amount}`}
-      </Text>
-      <Text type="label" bold>
-        {`Grand Total: ${currencySymbol} ${item.total_due}`}
-      </Text>
+      <Text type="label">{`${translate('orderListItem.status')}: ${item.status}`}</Text>
+      <View style={styles.row}>
+        <Text type="label">
+          {`${translate('common.subTotal')}: `}
+        </Text>
+        <Price
+          basePrice={item.subtotal}
+          currencyRate={1}
+          currencySymbol={currencySymbol}
+        />
+      </View>
+      <View style={styles.row}>
+        <Text type="label">
+          {`${translate('orderListItem.shippingAndHandling')}: `}
+        </Text>
+        <Price
+          basePrice={item.shipping_amount}
+          currencyRate={1}
+          currencySymbol={currencySymbol}
+        />
+      </View>
+      <View style={styles.row}>
+        <Text type="label" bold>
+          {`${translate('common.grandTotal')}: `}
+        </Text>
+        <Price
+          basePrice={item.total_due}
+          currencyRate={1}
+          currencySymbol={currencySymbol}
+        />
+      </View>
     </View>
   );
 };
 
 OrderScreen.navigationOptions = ({ navigation }) => ({
-  title: `Order # ${navigation.state.params.item.increment_id}`,
+  title: `${translate('common.order')} # ${navigation.state.params.item.increment_id}`,
 });
 
 const styles = StyleSheet.create({
@@ -93,7 +126,6 @@ const styles = StyleSheet.create({
     flex: 1,
   }),
   row: {
-    flex: 1,
     flexDirection: 'row',
   },
   imageStyle: theme => ({
@@ -105,7 +137,6 @@ const styles = StyleSheet.create({
 OrderScreen.propTypes = {
   products: PropTypes.object.isRequired,
   navigation: PropTypes.object.isRequired,
-  currencySymbol: PropTypes.string.isRequired,
   orderProductDetail: PropTypes.func.isRequired,
 };
 
@@ -113,10 +144,8 @@ OrderScreen.defaultProps = {};
 
 const mapStateToProps = ({ account, magento }) => {
   const { products } = account;
-  const { default_display_currency_symbol: currencySymbol } = magento.currency;
   return {
     products,
-    currencySymbol,
   };
 };
 

@@ -1,6 +1,11 @@
 import { REHYDRATE } from 'redux-persist/es/constants';
 import {
-  MAGENTO_GET_COUNTRIES, MAGENTO_INIT, MAGENTO_INIT_ERROR, MAGENTO_STORE_CONFIG, MAGENTO_GET_CURRENCY,
+  MAGENTO_INIT,
+  MAGENTO_INIT_ERROR,
+  UI_CHANGE_CURRENCY,
+  MAGENTO_STORE_CONFIG,
+  MAGENTO_GET_CURRENCY,
+  MAGENTO_GET_COUNTRIES,
 } from '../actions/types';
 import { magento } from '../magento';
 
@@ -8,7 +13,16 @@ const INITIAL_STATE = {
   magento: null,
   storeConfig: null,
   countries: null,
-  currency: {},
+  currency: {
+    default_display_currency_code: '',
+    default_display_currency_symbol: '',
+    /**
+     * Below three keys will be used in the APP
+     */
+    displayCurrencyCode: '',
+    displayCurrencySymbol: '',
+    displayCurrencyExchangeRate: 1,
+  },
 };
 
 export default (state = INITIAL_STATE, action) => {
@@ -28,8 +42,37 @@ export default (state = INITIAL_STATE, action) => {
       }
       return state;
     }
-    case MAGENTO_GET_CURRENCY:
-      return { ...state, errorMessage: null, currency: action.payload };
+    case MAGENTO_GET_CURRENCY: {
+      const {
+        currencyData,
+        displayCurrency: {
+          code,
+          symbol,
+          rate
+        }
+      } = action.payload;
+      return {
+        ...state,
+        errorMessage: null,
+        currency: {
+          ...state.currency,
+          ...currencyData,
+          displayCurrencyCode: code,
+          displayCurrencySymbol: symbol,
+          displayCurrencyExchangeRate: rate,
+        },
+      };
+    }
+    case UI_CHANGE_CURRENCY:
+      return {
+        ...state,
+        currency: {
+          ...state.currency,
+          displayCurrencyCode: action.payload.currencyCode,
+          displayCurrencySymbol: action.payload.currencySymbol,
+          displayCurrencyExchangeRate: action.payload.currencyRate,
+        },
+      };
     case MAGENTO_GET_COUNTRIES: {
       return { ...state, countries: action.payload };
     }

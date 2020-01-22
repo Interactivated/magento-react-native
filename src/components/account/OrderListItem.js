@@ -5,16 +5,18 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import PropTypes from 'prop-types';
-import { Text } from '../common';
+import { Text, Price } from '../common';
 import { NAVIGATION_ORDER_PATH } from '../../navigation/routes';
 import NavigationService from '../../navigation/NavigationService';
 import { ThemeContext } from '../../theme';
+import { translate } from '../../i18n';
+import { priceSignByCode } from '../../helper/price';
 
 const OrderListItem = ({
   item,
-  currencySymbol,
 }) => {
   const theme = useContext(ThemeContext);
+  const currencySymbol = priceSignByCode(item.order_currency_code);
 
   const openOrdersScreen = () => {
     NavigationService.navigate(NAVIGATION_ORDER_PATH, {
@@ -25,15 +27,22 @@ const OrderListItem = ({
   return (
     <TouchableOpacity onPress={openOrdersScreen}>
       <View style={styles.container(theme)}>
-        <Text bold>{`Order # ${item.increment_id}`}</Text>
-        <Text type="label">{`Created: ${item.created_at}`}</Text>
+        <Text bold>{`${translate('common.order')} # ${item.increment_id}`}</Text>
+        <Text type="label">{`${translate('orderListItem.created')}: ${item.created_at}`}</Text>
         <Text type="label">
-          {`Ship to ${item.customer_firstname} ${item.customer_lastname}`}
+          {`${translate('orderListItem.shipTo')} ${item.customer_firstname} ${item.customer_lastname}`}
         </Text>
-        <Text type="label">
-          {`Order Total: ${currencySymbol} ${item.grand_total}`}
-        </Text>
-        <Text type="label">{`Status: ${item.status}`}</Text>
+        <View style={styles.row}>
+          <Text type="label">
+            {`${translate('orderListItem.orderTotal')}: `}
+          </Text>
+          <Price
+            basePrice={item.grand_total}
+            currencySymbol={currencySymbol}
+            currencyRate={1}
+          />
+        </View>
+        <Text type="label">{`${translate('orderListItem.status')}: ${item.status}`}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -49,6 +58,9 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border,
     flex: 1,
   }),
+  row: {
+    flexDirection: 'row',
+  },
 });
 
 OrderListItem.propTypes = {

@@ -1,18 +1,18 @@
 import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
-import {
-  View,
-  Image,
-  TouchableOpacity,
-} from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { Text } from './Text';
+import { Price } from './Price';
 import { getProductThumbnailFromAttribute } from '../../helper/product';
 import { ThemeContext } from '../../theme';
+import { finalPrice } from '../../helper/price';
 
 const ProductListItem = ({
   product,
   onRowPress,
   currencySymbol,
+  currencyRate,
   imageStyle,
   infoStyle,
   textStyle,
@@ -30,16 +30,20 @@ const ProductListItem = ({
         onPress={() => { onRowPress(product); }}
       >
 
-        <Image
+        <FastImage
           style={[styles.imageStyle(theme), imageStyle]}
           resizeMode="contain"
           source={{ uri: image() }}
         />
         <View style={[styles.infoStyle, infoStyle]}>
           <Text type="subheading" style={[styles.textStyle(theme), textStyle]}>{product.name}</Text>
-          <Text type="heading" style={[styles.priceStyle(theme), priceStyle]}>
-            {`${currencySymbol} ${product.price}`}
-          </Text>
+          <Price
+            style={styles.textStyle(theme)}
+            basePrice={product.price}
+            discountPrice={finalPrice(product.custom_attributes, product.price)}
+            currencyRate={currencyRate}
+            currencySymbol={currencySymbol}
+          />
         </View>
       </TouchableOpacity>
     </View>
@@ -65,10 +69,11 @@ ProductListItem.propTypes = {
   viewContainerStyle: PropTypes.object,
   columnContainerStyle: PropTypes.object,
   currencySymbol: PropTypes.string.isRequired,
+  currencyRate: PropTypes.number.isRequired,
 };
 
 ProductListItem.defaultProps = {
-  onRowPress: () => {},
+  onRowPress: () => { },
   imageStyle: {},
   infoStyle: {},
   textStyle: {},
@@ -89,14 +94,8 @@ const styles = {
     flex: 2,
   },
   textStyle: theme => ({
-    flex: 1,
     padding: theme.spacing.small,
-    marginTop: theme.spacing.large,
-  }),
-  priceStyle: theme => ({
-    flex: 1,
-    padding: theme.spacing.small,
-    paddingTop: 0,
+    marginBottom: theme.spacing.medium,
   }),
   imageStyle: theme => ({
     height: theme.dimens.productListItemImageHeight,

@@ -10,11 +10,12 @@ import {
   checkoutCustomerNextLoading,
 } from '../../actions';
 import { ThemeContext } from '../../theme';
+import { translate } from '../../i18n';
 
 class CheckoutShippingMethod extends Component {
   static contextType = ThemeContext;
 
-  componentWillMount() {
+  componentDidMount() {
     const { shipping, selectedShipping } = this.props;
     if (!selectedShipping && shipping.length) {
       this.props.checkoutSelectedShippingChanged(shipping[0]);
@@ -82,14 +83,14 @@ class CheckoutShippingMethod extends Component {
 
   renderShippingMethods() {
     const theme = this.context;
-    const { shipping } = this.props;
+    const { shipping, currencySymbol, currencyRate } = this.props;
 
     if (!shipping || !shipping.length) {
-      return <Text>Shipping methods not found for selected address</Text>;
+      return <Text>{translate('checkout.noShippingMethod')}</Text>;
     }
 
     const radioProps = shipping.map((item) => {
-      const label = `${item.carrier_title} - ${item.method_title} - ${item.amount}`;
+      const label = `${item.carrier_title} - ${item.method_title} - ${currencySymbol + (item.base_amount * currencyRate).toFixed(2)}`;
       return {
         label,
         value: item,
@@ -130,7 +131,7 @@ class CheckoutShippingMethod extends Component {
           onPress={this.onNextPressed}
           style={styles.buttonStyle(theme)}
         >
-          Next
+          {translate('common.next')}
         </Button>
       </View>
     );
@@ -167,7 +168,7 @@ const styles = {
   }),
 };
 
-const mapStateToProps = ({ cart, checkout }) => {
+const mapStateToProps = ({ cart, checkout, magento }) => {
   const {
     email,
     password,
@@ -182,6 +183,12 @@ const mapStateToProps = ({ cart, checkout }) => {
     region,
     loading,
   } = checkout.ui;
+  const {
+    currency: {
+      displayCurrencySymbol: currencySymbol,
+      displayCurrencyExchangeRate: currencyRate,
+    },
+  } = magento;
 
   const { shipping, selectedShipping } = checkout;
   const { cartId } = cart;
@@ -202,6 +209,8 @@ const mapStateToProps = ({ cart, checkout }) => {
     loading,
     shipping,
     selectedShipping,
+    currencySymbol,
+    currencyRate,
   };
 };
 

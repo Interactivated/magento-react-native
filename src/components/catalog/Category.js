@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { connect } from 'react-redux';
+import { connect, useSelector } from 'react-redux';
 import {
   View,
   RefreshControl,
@@ -11,7 +11,7 @@ import {
   setCurrentProduct,
   updateProductsForCategoryOrChild,
 } from '../../actions';
-import { ProductList, HeaderIcon } from '../common';
+import { ProductList, HeaderGridToggleIcon } from '../common';
 import NavigationService from '../../navigation/NavigationService';
 import {
   NAVIGATION_HOME_PRODUCT_PATH,
@@ -29,18 +29,18 @@ const Category = ({
   refreshing,
   navigation,
   currencySymbol,
+  currencyRate,
   addFilterData: _addFilterData,
   getProductsForCategoryOrChild: _getProductsForCategoryOrChild,
   setCurrentProduct: _setCurrentProduct,
   updateProductsForCategoryOrChild: _updateProductsForCategoryOrChild,
 }) => {
   const theme = useContext(ThemeContext);
-  const [gridColumnsValue, setGridColumnsValue] = useState(true);
+  const listTypeGrid = useSelector(({ ui }) => ui.listTypeGrid );
 
   useEffect(() => {
     _addFilterData({ categoryScreen: true });
     _getProductsForCategoryOrChild(category);
-    navigation.setParams({ changeGridValueFunction });
   }, []);
 
   const onRowPress = (product) => {
@@ -67,8 +67,6 @@ const Category = ({
     _getProductsForCategoryOrChild(category, null, _sortOrder, priceFilter);
   };
 
-  const changeGridValueFunction = () => setGridColumnsValue(!gridColumnsValue);
-
   return (
     <View style={styles.containerStyle(theme)}>
       <ProductList
@@ -83,10 +81,11 @@ const Category = ({
         canLoadMoreContent={canLoadMoreContent}
         onRowPress={onRowPress}
         navigation={navigation}
-        gridColumnsValue={gridColumnsValue}
+        gridColumnsValue={listTypeGrid}
         performSort={performSort}
         sortOrder={sortOrder}
         currencySymbol={currencySymbol}
+        currencyRate={currencyRate}
       />
     </View>
   );
@@ -95,7 +94,7 @@ const Category = ({
 Category.navigationOptions = ({ navigation }) => ({
   title: navigation.state.params.title.toUpperCase(),
   headerBackTitle: ' ',
-  headerRight: (<HeaderIcon changeGridValueFunction={navigation.getParam('changeGridValueFunction')} />),
+  headerRight: (<HeaderGridToggleIcon />),
 });
 
 const styles = {
@@ -114,6 +113,7 @@ Category.propTypes = {
   refreshing: PropTypes.bool.isRequired,
   navigation: PropTypes.object.isRequired,
   currencySymbol: PropTypes.string.isRequired,
+  currencyRate: PropTypes.number.isRequired,
   addFilterData: PropTypes.func.isRequired,
   getProductsForCategoryOrChild: PropTypes.func.isRequired,
   setCurrentProduct: PropTypes.func.isRequired,
@@ -127,7 +127,12 @@ const mapStateToProps = (state) => {
   const {
     products, totalCount, loadingMore, refreshing,
   } = state.category;
-  const { default_display_currency_symbol: currencySymbol } = state.magento.currency;
+  const {
+    currency: {
+      displayCurrencySymbol: currencySymbol,
+      displayCurrencyExchangeRate: currencyRate,
+    },
+  } = state.magento;
   const { priceFilter, sortOrder } = state.filters;
   const canLoadMoreContent = products.length < totalCount;
 
@@ -141,6 +146,7 @@ const mapStateToProps = (state) => {
     priceFilter,
     sortOrder,
     currencySymbol,
+    currencyRate,
   };
 };
 

@@ -10,11 +10,12 @@ import {
   checkoutCustomerNextLoading,
 } from '../../actions';
 import { ThemeContext } from '../../theme';
+import { translate } from '../../i18n';
 
 class CheckoutPaymentMethod extends Component {
   static contextType = ThemeContext;
 
-  componentWillMount() {
+  componentDidMount() {
     const { payments, selectedPayment } = this.props;
     if (!selectedPayment && payments.length) {
       this.props.checkoutSelectedPaymentChanged(payments[0]);
@@ -58,7 +59,7 @@ class CheckoutPaymentMethod extends Component {
     const { payments } = this.props;
 
     if (!payments || !payments.length) {
-      return <Text>Payment methods not found</Text>;
+      return <Text>{translate('checkout.noPaymentMethod')}</Text>;
     }
 
     const radioProps = payments.map(item => ({
@@ -100,7 +101,7 @@ class CheckoutPaymentMethod extends Component {
           onPress={this.onNextPressed}
           style={styles.buttonStyle(theme)}
         >
-              Next
+              {translate('common.next')}
         </Button>
       </View>
     );

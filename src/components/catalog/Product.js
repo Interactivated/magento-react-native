@@ -15,18 +15,28 @@ import {
   uiProductCustomOptionUpdate,
   getCustomOptions,
 } from '../../actions';
-import { Spinner, ModalSelect, Button, Text, Input } from '../common';
+import { Spinner, ModalSelect, Button, Text, Input, Price } from '../common';
 import { getProductCustomAttribute } from '../../helper/product';
 import ProductMedia from './ProductMedia';
 import { logError } from '../../helper/logger';
 import { ThemeContext } from '../../theme';
+import { translate } from '../../i18n';
+import { finalPrice } from '../../helper/price';
 
 class Product extends Component {
   static contextType = ThemeContext;
 
   static propTypes = {
-    currencySymbol: PropTypes.string,
+    currencySymbol: PropTypes.string.isRequired,
+    currencyRate: PropTypes.number.isRequired,
     uiProductCustomOptionUpdate: PropTypes.func,
+    getConfigurableProductOptions: PropTypes.func,
+    getCustomOptions: PropTypes.func,
+    getProductMedia: PropTypes.func,
+    uiProductUpdateOptions: PropTypes.func,
+    addToCartLoading: PropTypes.func,
+    addToCart: PropTypes.func,
+    updateProductQtyInput: PropTypes.func,
   };
 
   static defaultProps = {
@@ -47,8 +57,9 @@ class Product extends Component {
 
     if (product.type_id === 'configurable') {
       this.props.getConfigurableProductOptions(product.sku);
-      this.props.getCustomOptions(product.sku);
     }
+
+    this.props.getCustomOptions(product.sku);
 
     if (!medias || !medias[product.sku]) {
       this.props.getProductMedia({ sku: product.sku });
@@ -150,6 +161,7 @@ class Product extends Component {
   }
 
   renderCustomOptions = () => {
+    const theme = this.context;
     const { customOptions } = this.props;
     if (customOptions) {
       return customOptions.map((option) => {
@@ -160,6 +172,7 @@ class Product extends Component {
 
         return (
           <ModalSelect
+            style={styles.modalStyle(theme)}
             disabled={data.length === 0}
             key={option.option_id}
             label={option.title}
@@ -258,7 +271,7 @@ class Product extends Component {
     }
     return (
       <Button style={styles.buttonStyle(theme)} onPress={this.onPressAddToCart}>
-        Add to Cart
+        {translate('product.addToCartButton')}
       </Button>
     );
   }
@@ -297,9 +310,24 @@ class Product extends Component {
   renderPrice = () => {
     const { selectedProduct } = this.state;
     if (selectedProduct) {
-      return selectedProduct.price;
+      return (
+        <Price
+          style={styles.priceContainer}
+          basePrice={selectedProduct.price}
+          currencySymbol={this.props.currencySymbol}
+          currencyRate={this.props.currencyRate}
+        />
+      );
     }
-    return this.props.product.price;
+    return (
+      <Price
+        style={styles.priceContainer}
+        basePrice={this.props.product.price}
+        discountPrice={finalPrice(this.props.product.custom_attributes, this.props.product.price)}
+        currencySymbol={this.props.currencySymbol}
+        currencyRate={this.props.currencyRate}
+      />
+    );
   }
 
   renderProductMedia = () => {
@@ -329,10 +357,8 @@ class Product extends Component {
       >
         {this.renderProductMedia()}
         <Text type="heading" bold style={styles.textStyle(theme)}>{this.props.product.name}</Text>
-        <Text type="subheading" bold style={styles.textStyle(theme)}>
-          {`${this.props.currencySymbol}${this.renderPrice()}`}
-        </Text>
-        <Text bold style={styles.textStyle(theme)}>Qty</Text>
+        {this.renderPrice()}
+        <Text bold style={styles.textStyle(theme)}>{translate('common.quantity')}</Text>
         <Input
           containerStyle={styles.inputContainer(theme)}
           inputStyle={{ textAlign: 'center' }}
@@ -384,12 +410,20 @@ const styles = StyleSheet.create({
     padding: theme.spacing.small,
     color: theme.colors.error,
   }),
+  priceContainer: {
+    alignSelf: 'center',
+  },
 });
 
 const mapStateToProps = (state) => {
   const { product, options, medias, customOptions } = state.product.current;
   const { attributes, selectedOptions, selectedCustomOptions } = state.product;
-  const { default_display_currency_symbol: currencySymbol } = state.magento.currency;
+  const {
+    currency: {
+      displayCurrencySymbol: currencySymbol,
+      displayCurrencyExchangeRate: currencyRate,
+    },
+  } = state.magento;
   const { cart, account } = state;
   console.log('Product Component');
   console.log(state.product);
@@ -400,6 +434,7 @@ const mapStateToProps = (state) => {
     product,
     options,
     attributes,
+    currencyRate,
     customOptions,
     currencySymbol,
     selectedOptions,

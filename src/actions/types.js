@@ -63,6 +63,7 @@ export const UI_ACCOUNT_CUSTOMER_DATA_UPDATE = 'ui_account_customer_data_update'
 export const UI_ACCOUNT_CUSTOMER_DATA_LOADING = 'ui_account_customer_data_loading';
 export const RESET_ACCOUNT_ADDRESS_UI = 'reset_account_address_ui';
 export const MAGENTO_ADD_ACCOUNT_ADDRESS_ERROR = 'magento_add_account_address_error';
+export const UI_CHANGE_CURRENCY = 'Change_Display_Currency';
 
 export const UI_CHECKOUT_ACTIVE_SECTION = 'ui_checkout_active_section';
 
@@ -82,3 +83,5 @@ export const MAGENTO_UPDATE_REFRESHING_CART_ITEM_PRODUCT = 'magento_update_refre
 
 export const ADD_FILTER_DATA = 'add_filter_data';
 export const RESET_FILTERS_DATA = 'reset_filters_data';
+
+export const UI_PRODUCT_LIST_TYPE_GRID = 'ui_product_list_type_grid';

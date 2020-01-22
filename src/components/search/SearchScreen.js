@@ -9,32 +9,27 @@ import {
   resetFilters,
   setCurrentProduct,
 } from '../../actions';
-import { ProductList, HeaderIcon } from '../common';
+import { ProductList, HeaderGridToggleIcon } from '../common';
 import NavigationService from '../../navigation/NavigationService';
 import { NAVIGATION_SEARCH_PRODUCT_PATH } from '../../navigation/routes';
 import { ThemeContext } from '../../theme';
+import { translate } from '../../i18n';
 
 class SearchScreen extends Component {
   static contextType = ThemeContext;
 
   static navigationOptions = ({ navigation }) => ({
-    title: 'Search',
+    title: translate('search.title'),
     headerBackTitle: ' ',
-    headerRight: (<HeaderIcon changeGridValueFunction={navigation.getParam('changeGridValueFunction')} />),
+    headerRight: (<HeaderGridToggleIcon />),
   });
 
   constructor(props) {
     super(props);
     this.state = {
       input: '',
-      gridColumnsValue: true,
     };
     this.getSearchProducts = _.debounce(this.props.getSearchProducts, 1000);
-  }
-
-  componentDidMount() {
-    const { navigation } = this.props;
-    navigation.setParams({ changeGridValueFunction: this.changeGridValueFunction });
   }
 
   onRowPress = (product) => {
@@ -69,10 +64,6 @@ class SearchScreen extends Component {
     this.props.getSearchProducts(this.state.input, null, sortOrder, this.props.priceFilter);
   };
 
-  changeGridValueFunction = () => {
-    this.setState({ gridColumnsValue: !this.state.gridColumnsValue });
-  };
-
   renderContent = () => (
     <ProductList
       products={this.props.products}
@@ -81,9 +72,10 @@ class SearchScreen extends Component {
       canLoadMoreContent={this.props.canLoadMoreContent}
       searchIndicator
       onRowPress={this.onRowPress}
-      gridColumnsValue={this.state.gridColumnsValue}
+      gridColumnsValue={this.props.listTypeGrid}
       performSort={this.performSort}
       currencySymbol={this.props.currencySymbol}
+      currencyRate={this.props.currencyRate}
     />
   );
 
@@ -94,7 +86,7 @@ class SearchScreen extends Component {
     return (
       <View style={styles.containerStyle(theme)}>
         <SearchBar
-          placeholder="Type here..."
+          placeholder={translate('search.searchPlaceholderText')}
           onChangeText={this.updateSearch}
           value={input}
           containerStyle={styles.searchStyle(theme)}
@@ -140,14 +132,28 @@ const styles = {
   },
 };
 
-const mapStateToProps = ({ search, filters, magento }) => {
+const mapStateToProps = ({ search, filters, magento, ui }) => {
   const { sortOrder, priceFilter } = filters;
   const { products, totalCount, loadingMore } = search;
-  const { default_display_currency_symbol: currencySymbol } = magento.currency;
+  const {
+    currency: {
+      displayCurrencySymbol: currencySymbol,
+      displayCurrencyExchangeRate: currencyRate,
+    },
+  } = magento;
   const canLoadMoreContent = products.length < totalCount;
+  const { listTypeGrid } = ui;
 
   return {
-    products, totalCount, canLoadMoreContent, loadingMore, sortOrder, priceFilter, currencySymbol,
+    products,
+    sortOrder,
+    totalCount,
+    loadingMore,
+    priceFilter,
+    currencyRate,
+    listTypeGrid,
+    currencySymbol,
+    canLoadMoreContent,
   };
 };
 

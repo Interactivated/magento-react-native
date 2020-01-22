@@ -15,14 +15,15 @@ import {
   NAVIGATION_CHECKOUT_PATH,
   NAVIGATION_HOME_SCREEN_PATH,
 } from '../../navigation/routes';
-import { Button, Text } from '../common';
+import { Button, Text, Price } from '../common';
 import { ThemeContext } from '../../theme';
+import { translate } from '../../i18n';
 
 class Cart extends Component {
   static contextType = ThemeContext;
 
   static navigationOptions = {
-    title: 'Cart',
+    title: translate('cart.title'),
     headerBackTitle: ' ',
   };
 
@@ -56,7 +57,7 @@ class Cart extends Component {
 
   onPressAddToCheckout = () => {
     NavigationService.navigate(NAVIGATION_CHECKOUT_PATH, {
-      title: 'Cart',
+      title: translate('cart.title'),
     });
   };
 
@@ -96,11 +97,16 @@ class Cart extends Component {
 
     if (sum > 0) {
       return (
-        <Text type="heading" style={totals(theme)}>
-          Totals
-          {' '}
-          {sum.toFixed(2)}
-        </Text>
+        <View style={styles.totalPriceContainer}>
+          <Text type="heading">
+            {`${translate('common.total')} `}
+          </Text>
+          <Price
+            currencyRate={this.props.currencyRate}
+            currencySymbol={this.props.currencySymbol}
+            basePrice={sum}
+          />
+        </View>
       );
     }
   }
@@ -118,20 +124,27 @@ class Cart extends Component {
     return (
       <View style={containerStyle(theme)}>
         <Text type="heading" style={totals(theme)}>
-          Your cart is empty
+          {translate('cart.emptyMessage')}
         </Text>
         <TouchableOpacity
           onPress={() => navigate(NAVIGATION_HOME_SCREEN_PATH)}
         >
           <Text type="heading" bold style={buttonTextStyle(theme)}>
-            Continue Shopping
+            {translate('common.continueShopping')}
           </Text>
         </TouchableOpacity>
       </View>
     );
   };
 
-  renderItem = items => <CartListItem item={items.item} expanded={false} />
+  renderItem = items => (
+    <CartListItem
+      expanded={false}
+      item={items.item}
+      currencyRate={this.props.currencyRate}
+      currencySymbol={this.props.currencySymbol}
+    />
+  );
 
   renderCart = () => {
     const theme = this.context;
@@ -164,7 +177,7 @@ class Cart extends Component {
             onPress={this.onPressAddToCheckout}
             style={buttonStyle(theme)}
           >
-            Go to Checkout
+            {translate('cart.checkoutButton')}
           </Button>
         </View>
       </View>
@@ -198,6 +211,10 @@ const styles = StyleSheet.create({
   totals: theme => ({
     paddingTop: theme.spacing.small,
   }),
+  totalPriceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   buttonTextStyle: theme => ({
     padding: theme.spacing.large,
     top: 0,
@@ -213,12 +230,20 @@ const styles = StyleSheet.create({
   }),
 });
 
-const mapStateToProps = ({ cart }) => {
+const mapStateToProps = ({ cart, magento }) => {
   const { products } = cart;
+  const {
+    currency: {
+      displayCurrencySymbol: currencySymbol,
+      displayCurrencyExchangeRate: currencyRate,
+    },
+  } = magento;
   return {
+    products,
+    currencyRate,
+    currencySymbol,
     cart: cart.quote,
     refreshing: cart.refreshing,
-    products,
   };
 };
 
